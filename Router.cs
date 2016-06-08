@@ -39,7 +39,7 @@ namespace DistanceVector
             // Init distance vector
             for (int i = 0; i < n; i++) {
                 dv[i] = INFINITY;
-                next[i] = -1;
+                next[i] = -1;// next router is empty  
                 nextHop[i] = i;
             }
 
@@ -53,7 +53,7 @@ namespace DistanceVector
             dv[id] = 0;
             next[id] = id;
             self = new Neighbor(n, id, address, port, dv);
-            distribute();
+            send();
 
             // Read from neighbors
             IPEndPoint localEndPoint = new IPEndPoint(address, port);
@@ -121,7 +121,7 @@ namespace DistanceVector
             return result;
         }
         // Send distance vector to all neighbors 
-        public void distribute() {
+        public void send() {
             foreach(NeighborNode nn in neighborList) {
                 Broadcaster br = new Broadcaster(self, nn.self);
                 Thread brThread = new Thread(new ThreadStart(br.run));
