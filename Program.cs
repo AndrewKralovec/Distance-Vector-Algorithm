@@ -26,15 +26,15 @@ namespace DistanceVector
 		// Main Method
 		public static void Main(string[] args) {
 			if (args.Length == 0) {
-				Console.WriteLine("Usage: C# Router id");
-				Console.WriteLine("  where id = this router's id (between 0 and n-1)");
+				Console.Write("\n Usage: <router id> ");
+				Console.Write(" where id (between 0 and n-1)\n");
 				Console.ReadLine(); 
 				Environment.Exit(1);
 			}
 			for (int j = 0; j < args.Length ; j++) {
 				int id = int.Parse(args[j]);
 					for (int i = 0; i < n; i++){
-												address[i] = IPAddress.Parse(dns[i]);
+						address[i] = IPAddress.Parse(dns[i]);
 					}
 					node = new Neighbor[n];
 					for (int i = 0; i < n; i++) {

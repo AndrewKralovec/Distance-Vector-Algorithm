@@ -23,13 +23,14 @@ namespace DistanceVector
             Socket sock = null;
             bool done = false;
             int tries = 0;
+            // Try five times to send packet, otherwise there is an error
             while (!done && tries < 5) {
                 try {
                     Thread.Sleep(1000);
                     IPAddress hostAddress = going.address;
                     int conPort = going.port;
                     IPEndPoint hostEndPoint = new IPEndPoint(hostAddress, conPort);
-
+                    // Connect to router
                     sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     sock.Connect(hostEndPoint);
                     if (!sock.Connected) {
@@ -37,8 +38,8 @@ namespace DistanceVector
                         sock = null;
                         break;
                     }
+                    // Send table 
                     sock.Send(Encoding.UTF8.GetBytes(dvs));
-                    sock.Send(Encoding.UTF8.GetBytes(" "));
                     sock.Close();
                     done = true;
                 }
