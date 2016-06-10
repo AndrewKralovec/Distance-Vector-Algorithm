@@ -1,6 +1,7 @@
 # Distance-Vector-Algorithm
 Created a Distance Vector Algorithm for .NET framework. 
 The purpose of this program is to implement a Distance Vector Routing Protocol in c# 
+This project will eventually become a .NET library for finding distances between routers. 
 
 # Start Program # 
 in your terminal launch `mono DistanceVector.exe <router name> `
