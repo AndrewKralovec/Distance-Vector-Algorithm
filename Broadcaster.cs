@@ -5,13 +5,12 @@ using System.Net;
 using System.Threading;
 using System.Net.Sockets;
 
-namespace DistanceVector
-{
+namespace DistanceVector {
     public class Broadcaster {
         // Sending to 
-        private Neighbor going {get;set;}
+        private Neighbor going { get; set; }
         // Receiving from
-        private Neighbor comming {get;set;}
+        private Neighbor comming { get; set; }
         // Constructor
         public Broadcaster(Neighbor comming, Neighbor going) {
             this.comming = comming;
@@ -42,22 +41,21 @@ namespace DistanceVector
                     sock.Send(Encoding.UTF8.GetBytes(dvs));
                     sock.Close();
                     done = true;
-                }
-                catch (Exception) {
+                } catch (Exception) {
                     tries++;
                     if (tries >= 5)
                         Console.WriteLine("{0}: Cannot connect to :{1}\nat Address:{2} port:{3} ", comming.id, going.id, going.address, going.port);
                 }
             }
         }
-        // Convert table into string for UTF writing 
+        // Convert table into string for UTF writing with the coming from id on the end 
         public String convert(int[] dv) {
             // Fix offset for spaces following 
             String result = dv[0] + "";
             for (int i = 1; i < dv.Length; i++) {
                 result += " " + dv[i];
             }
-            return result;
+            return (result+" "+comming.id);
         }
     }
 }

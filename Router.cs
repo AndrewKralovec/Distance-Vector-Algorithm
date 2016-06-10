@@ -4,35 +4,36 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Collections.Generic;
-using System.Net.Sockets; 
+using System.Net.Sockets;
 
-namespace DistanceVector
-{
+namespace DistanceVector {
     public class Router {
+        private static int fromHop = 0;
         private int n;
         private int id;
         private IPAddress address;
         private int port;
-        private List <NeighborNode> neighborList;
+        public Dictionary<Neighbor, int> neighborList = new Dictionary<Neighbor, int>();
+        private string[] nodes; 
         private int[] dv;
         private int[] next;
         private Neighbor self;
-        private const int INFINITY = 10000000;
+        private const int INFINITY = int.MaxValue;
         private int[] nextHop;
-        private int fromHop = 0;
         private string data = null;
         private byte[] bytes = new byte[1024];
 
         // Constructor
-        public Router(int n, int id, IPAddress address, int port, List <NeighborNode> neighborList) {
+        public Router(int n, int id, IPAddress address, int port, Dictionary<Neighbor, int> neighborList, string[] nodes) {
             this.n = n;
             this.id = id;
             this.address = address;
             this.port = port;
             this.neighborList = neighborList;
+            this.nodes = nodes; 
             dv = new int[n];
             next = new int[n];
-            nextHop  = new int[n];
+            nextHop = new int[n];
         }
         // Thread method 
         public void run() {
@@ -44,9 +45,9 @@ namespace DistanceVector
             }
 
             // Set distance vector neighbors 
-            foreach (NeighborNode nn in neighborList) {
-                dv[nn.self.id] = nn.cost ; 
-                next[nn.self.id] = nn.self.id ; 
+            foreach (var nn in neighborList) {
+                dv[nn.Key.id] = nn.Value;
+                next[nn.Key.id] = nn.Value;
             }
 
             // Distance to self is 0 
@@ -60,12 +61,12 @@ namespace DistanceVector
 
             // Create a TCP/IP socket.
             Socket listener = new Socket(AddressFamily.InterNetwork,
-            SocketType.Stream, ProtocolType.Tcp );
+            SocketType.Stream, ProtocolType.Tcp);
             try {
                 listener.Bind(localEndPoint);
                 listener.Listen(10);
             } catch (Exception ex) {
-                Console.WriteLine(ex); 
+                Console.WriteLine(ex);
             }
             while (true) {
                 // Read distance vectors from socket  
@@ -73,10 +74,10 @@ namespace DistanceVector
                     Socket handler = listener.Accept();
                     int bytesRec = handler.Receive(bytes);
                     data = Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                    String[] dvTable = data.Split(' ');
+                    string[] dvTable = data.Split(' ');
                     int[] calcTable = compareDv(dvTable, dv);
                     int[] newTable = delayDv(calcTable, dv);
-                    Console.WriteLine(printDv(newTable)); 
+                    Console.WriteLine(printDv(newTable));
                 } catch (Exception ex) {
                     Console.WriteLine(ex);
                     break;
@@ -84,26 +85,35 @@ namespace DistanceVector
             }
         }
         // Print out distance vectors [debugging] 
-        public String printDv(int[] dv) {
+        public string printDv(int[] dv) {
             StringBuilder builder = new StringBuilder();
-            builder.Append("Router Table for "+this.id+" \n"); 
+            builder.Append("Router Table for " + nodes[id] + " \n");
             int count = 0;
             foreach (int d in dv) {
-                builder.Append(count + ":" + d + ":" + nextHop[count] + " \n");
+                string value = d.ToString(); 
+                if (d == INFINITY)
+                    value = "INFINITY"; 
+                builder.Append(nodes[count] + ":" + value + ":" + nodes[nextHop[count]] + " \n");
                 count++;
             }
-            return builder.ToString(); 
+            return builder.ToString();
         }
 
         // Compare delay times 
-        public int[] compareDv(String[] newDv, int[] oldDv) {
+        public int[] compareDv(string[] newDv, int[] oldDv) {
+            fromHop = int.Parse(newDv[(newDv.Length-1)]); 
             int[] result = new int[oldDv.Length];
             // Find index at which to calc the distances 
             for (int index = 0; index < oldDv.Length; index++) {
                 if (oldDv[index] == 0) {
                     for (int j = 0; j < oldDv.Length; j++) {
                         // Add offset to new table 
-                        result[j] = (int.Parse(newDv[j]) + int.Parse(newDv[index]));
+                        int temp = int.Parse(newDv[j]);
+                        // Check if we cant reach neighbor 
+                        if (temp == INFINITY)
+                            result[j] = temp; 
+                        else 
+                            result[j] = (int.Parse(newDv[j]) + int.Parse(newDv[index]));
                     }
                 }
             }
@@ -122,8 +132,8 @@ namespace DistanceVector
         }
         // Send distance vector to all neighbors 
         public void send() {
-            foreach(NeighborNode nn in neighborList) {
-                Broadcaster br = new Broadcaster(self, nn.self);
+            foreach (var nn in neighborList) {
+                Broadcaster br = new Broadcaster(self, nn.Key);
                 Thread brThread = new Thread(new ThreadStart(br.run));
                 brThread.Start();
             }
