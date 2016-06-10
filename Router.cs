@@ -22,9 +22,10 @@ namespace DistanceVector {
         private int[] nextHop;
         private string data = null;
         private byte[] bytes = new byte[1024];
-
+        
         // Constructor
-        public Router(int n, int id, IPAddress address, int port, Dictionary<Neighbor, int> neighborList, string[] nodes) {
+        public Router(int n, int id, IPAddress address, int port,
+        Dictionary<Neighbor, int> neighborList, string[] nodes) {
             this.n = n;
             this.id = id;
             this.address = address;
@@ -68,23 +69,26 @@ namespace DistanceVector {
             } catch (Exception ex) {
                 Console.WriteLine(ex);
             }
-            while (true) {
+            int finished = 0 ; 
+            int neighborCount = neighborList.Count ; 
+            while (true && finished < neighborCount) {
                 // Read distance vectors from socket  
                 try {
                     Socket handler = listener.Accept();
                     int bytesRec = handler.Receive(bytes);
                     data = Encoding.ASCII.GetString(bytes, 0, bytesRec);
                     string[] dvTable = data.Split(' ');
-                    int[] calcTable = compareDv(dvTable, dv);
-                    int[] newTable = delayDv(calcTable, dv);
-                    Console.WriteLine(printDv(newTable));
+                    delayDv(compareDv(dvTable, dv));
+                    finished++; 
                 } catch (Exception ex) {
                     Console.WriteLine(ex);
                     break;
                 }
             }
+            // Print dv table when done 
+            Console.WriteLine(printDv(dv));
         }
-        // Print out distance vectors [debugging] 
+        // Print out distance vectors
         public string printDv(int[] dv) {
             StringBuilder builder = new StringBuilder();
             builder.Append("Router Table for " + nodes[id] + " \n");
@@ -119,16 +123,14 @@ namespace DistanceVector {
             }
             return result;
         }
-        // Return table with the shortest delay 
-        public int[] delayDv(int[] newDv, int[] oldDv) {
-            int[] result = oldDv;
-            for (int i = 0; i < oldDv.Length; i++) {
-                if (oldDv[i] > newDv[i]) {
-                    result[i] = newDv[i];
+        // Set table with the shortest delay 
+        public void delayDv(int[] newDv) {
+            for (int i = 0; i < dv.Length; i++) {
+                if (dv[i] > newDv[i]) {
+                    dv[i] = newDv[i];
                     nextHop[i] = fromHop;
                 }
             }
-            return result;
         }
         // Send distance vector to all neighbors 
         public void send() {

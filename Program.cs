@@ -23,6 +23,7 @@ namespace DistanceVector
         };
         public static Neighbor[] node;
         public static Dictionary<Neighbor, int> neighborList; 
+        public static Thread[] routers = new Thread[n];
 
         // Main Method
         public static void Main(string[] args) {
@@ -50,9 +51,13 @@ namespace DistanceVector
                     }
                 }
                 Router router = new Router(n, id, address[id], port[id], neighborList,args);
-                Thread rThread = new Thread(new ThreadStart(router.run));
-                rThread.Start();
+                routers[j] = new Thread(new ThreadStart(router.run));
+                routers[j].Start();
             }
+            for(int j = 0; j < args.Length; j++){
+                routers[j].Join(); 
+            }
+            Console.WriteLine("Distance vector tables done: ");
         }
     }
 }
