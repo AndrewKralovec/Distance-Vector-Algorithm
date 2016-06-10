@@ -6,7 +6,7 @@
 			"type": "mono",
 			"request": "launch",
 			"program": "${workspaceRoot}/DistanceVector.exe",
-			"args": ["0","1","2","3","4"],
+			"args": ["A","B","C","D","E"],
 			"cwd": "${workspaceRoot}",
 			"preLaunchTask": "",
 			"runtimeExecutable": null,
